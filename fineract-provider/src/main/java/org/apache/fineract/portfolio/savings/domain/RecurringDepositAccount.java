@@ -55,6 +55,7 @@ import org.apache.fineract.portfolio.calendar.domain.Calendar;
 import org.apache.fineract.portfolio.calendar.service.CalendarUtils;
 import org.apache.fineract.portfolio.client.domain.Client;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
+import org.apache.fineract.portfolio.common.ConvertAmountToWords;
 import org.apache.fineract.portfolio.group.domain.Group;
 import org.apache.fineract.portfolio.interestratechart.domain.InterestRateChart;
 import org.apache.fineract.portfolio.savings.DepositAccountOnClosureType;
@@ -385,7 +386,7 @@ public class RecurringDepositAccount extends SavingsAccount {
                     }
                     final SavingsAccountTransaction transaction = SavingsAccountTransaction.deposit(null, office(), null,
                             dueDate, installment.getDepositAmountOutstanding(getCurrency()), installment.dueDate().toDate(),
-                            null);
+                            null, ConvertAmountToWords.convert(installment.getDepositAmountOutstanding(getCurrency()).getAmount()));
                     allTransactions.add(transaction);
                 }
             }
@@ -633,7 +634,7 @@ public class RecurringDepositAccount extends SavingsAccount {
             final SavingsAccountTransaction postingTransaction = findInterestPostingTransactionFor(interestPostingTransactionDate);
             if (postingTransaction == null) {
                 final SavingsAccountTransaction newPostingTransaction = SavingsAccountTransaction.interestPosting(this, office(),
-                        interestPostingTransactionDate, interestEarnedToBePostedForPeriod, interestPostingPeriod.isUserPosting());
+                        interestPostingTransactionDate, interestEarnedToBePostedForPeriod, interestPostingPeriod.isUserPosting(), ConvertAmountToWords.convert(interestEarnedToBePostedForPeriod.getAmount()));
                 addTransaction(newPostingTransaction);
                 recalucateDailyBalanceDetails = true;
             } else {
@@ -641,7 +642,7 @@ public class RecurringDepositAccount extends SavingsAccount {
                 if (correctionRequired) {
                     postingTransaction.reverse();
                     final SavingsAccountTransaction newPostingTransaction = SavingsAccountTransaction.interestPosting(this, office(),
-                            interestPostingTransactionDate, interestEarnedToBePostedForPeriod, interestPostingPeriod.isUserPosting());
+                            interestPostingTransactionDate, interestEarnedToBePostedForPeriod, interestPostingPeriod.isUserPosting(), ConvertAmountToWords.convert(interestEarnedToBePostedForPeriod.getAmount()));
                     addTransaction(newPostingTransaction);
                     recalucateDailyBalanceDetails = true;
                 }
@@ -673,7 +674,7 @@ public class RecurringDepositAccount extends SavingsAccount {
         if (!remainigInterestToBePosted.isZero()) {
             final boolean postInterestAsOn = false;
             final SavingsAccountTransaction newPostingTransaction = SavingsAccountTransaction.interestPosting(this, office(),
-                    accountCloseDate, remainigInterestToBePosted, postInterestAsOn);
+                    accountCloseDate, remainigInterestToBePosted, postInterestAsOn, ConvertAmountToWords.convert(remainigInterestToBePosted.getAmount()));
             addTransaction(newPostingTransaction);
             recalucateDailyBalance = true;
         }

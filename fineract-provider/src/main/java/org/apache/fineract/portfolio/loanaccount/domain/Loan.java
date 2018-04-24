@@ -91,6 +91,7 @@ import org.apache.fineract.portfolio.collateral.domain.LoanCollateral;
 import org.apache.fineract.portfolio.common.domain.DayOfWeekType;
 import org.apache.fineract.portfolio.common.domain.NthDayType;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
+import org.apache.fineract.portfolio.common.ConvertAmountToWords;
 import org.apache.fineract.portfolio.floatingrates.data.FloatingRateDTO;
 import org.apache.fineract.portfolio.floatingrates.data.FloatingRatePeriodData;
 import org.apache.fineract.portfolio.fund.domain.Fund;
@@ -1017,7 +1018,7 @@ public class Loan extends AbstractPersistableCustom<Long> {
 
         final LoanTransaction waiveLoanChargeTransaction = LoanTransaction.waiveLoanCharge(this, getOffice(), amountWaived,
                 transactionDate, feeChargesWaived, penaltyChargesWaived, unrecognizedIncome, DateUtils.getLocalDateTimeOfTenant(),
-                currentUser);
+                currentUser, ConvertAmountToWords.convert(amountWaived.getAmount()));
         final LoanChargePaidBy loanChargePaidBy = new LoanChargePaidBy(waiveLoanChargeTransaction, loanCharge, waiveLoanChargeTransaction
                 .getAmount(getCurrency()).getAmount(), loanInstallmentNumber);
         waiveLoanChargeTransaction.getLoanChargesPaid().add(loanChargePaidBy);
@@ -2683,7 +2684,7 @@ public class Loan extends AbstractPersistableCustom<Long> {
 
         Money disbursentMoney = Money.zero(getCurrency());
         final LoanTransaction chargesPayment = LoanTransaction.repaymentAtDisbursement(getOffice(), disbursentMoney, paymentDetail,
-                disbursedOn, null, createdDate, currentUser);
+                disbursedOn, null, createdDate, currentUser, ConvertAmountToWords.convert(disbursentMoney.getAmount()));
         final Integer installmentNumber = null;
         for (final LoanCharge charge : charges()) {
             Date actualDisbursementDate = getActualDisbursementDate(charge);
@@ -3249,7 +3250,7 @@ public class Loan extends AbstractPersistableCustom<Long> {
                     cumulativeIncomeFromIncomePosting.get("penalty"));
             BigDecimal amountToPost = interestToPost.add(feeToPost).add(penaltyToPost);
             LoanTransaction finalIncomeTransaction = LoanTransaction.incomePosting(this, this.getOffice(), closedDate, amountToPost,
-                    interestToPost, feeToPost, penaltyToPost, null);
+                    interestToPost, feeToPost, penaltyToPost, null, ConvertAmountToWords.convert(amountToPost));
             addLoanTransaction(finalIncomeTransaction) ;
             if (isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
                 List<LoanTransaction> updatedAccrualTransactions = retreiveListOfAccrualTransactions();
@@ -3420,7 +3421,7 @@ public class Loan extends AbstractPersistableCustom<Long> {
         }
 
         return LoanTransaction.waiver(getOffice(), this, possibleInterestToWaive, transactionDate, possibleInterestToWaive,
-                possibleInterestToWaive.zero(), createdDate, currentUser);
+                possibleInterestToWaive.zero(), createdDate, currentUser, ConvertAmountToWords.convert(possibleInterestToWaive.getAmount()));
     }
 
     public ChangedTransactionDetail adjustExistingTransaction(final LoanTransaction newTransactionDetail,
@@ -3593,7 +3594,7 @@ public class Loan extends AbstractPersistableCustom<Long> {
             }
 
             LocalDateTime createdDate = DateUtils.getLocalDateTimeOfTenant();
-            loanTransaction = LoanTransaction.writeoff(this, getOffice(), writtenOffOnLocalDate, txnExternalId, createdDate, currentUser);
+            loanTransaction = LoanTransaction.writeoff(this, getOffice(), writtenOffOnLocalDate, txnExternalId, createdDate, currentUser, ConvertAmountToWords.convert(this.getSummary().getTotalOutstanding()));
             LocalDate lastTransactionDate = getLastUserTransactionDate();
             if (lastTransactionDate.isAfter(writtenOffOnLocalDate)) {
                 final String errorMessage = "The date of the writeoff transaction must occur on or before previous transactions.";
@@ -3693,7 +3694,7 @@ public class Loan extends AbstractPersistableCustom<Long> {
                 }
                 this.closedOnDate = closureDate.toDate();
                 loanTransaction = LoanTransaction.writeoff(this, getOffice(), closureDate, txnExternalId,
-                        DateUtils.getLocalDateTimeOfTenant(), currentUser);
+                        DateUtils.getLocalDateTimeOfTenant(), currentUser, ConvertAmountToWords.convert(this.getSummary().getTotalOutstanding()));
                 final boolean isLastTransaction = isChronologicallyLatestTransaction(loanTransaction, getLoanTransactions());
                 if (!isLastTransaction) {
                     final String errorMessage = "The closing date of the loan must be on or after latest transaction date.";
@@ -5223,12 +5224,12 @@ public class Loan extends AbstractPersistableCustom<Long> {
 
         if (existingIncomeTransaction == null) {
             LoanTransaction transaction = LoanTransaction.incomePosting(this, this.getOffice(), compoundingDetail.getEffectiveDate()
-                    .toDate(), compoundingDetail.getAmount(), interest, fee, penalties, currentUser);
+                    .toDate(), compoundingDetail.getAmount(), interest, fee, penalties, currentUser, ConvertAmountToWords.convert(compoundingDetail.getAmount()));
             addLoanTransaction(transaction);
         } else if (existingIncomeTransaction.getAmount(getCurrency()).getAmount().compareTo(compoundingDetail.getAmount()) != 0) {
             existingIncomeTransaction.reverse();
             LoanTransaction transaction = LoanTransaction.incomePosting(this, this.getOffice(), compoundingDetail.getEffectiveDate()
-                    .toDate(), compoundingDetail.getAmount(), interest, fee, penalties, currentUser);
+                    .toDate(), compoundingDetail.getAmount(), interest, fee, penalties, currentUser, ConvertAmountToWords.convert(compoundingDetail.getAmount()));
             addLoanTransaction(transaction);
         }
 

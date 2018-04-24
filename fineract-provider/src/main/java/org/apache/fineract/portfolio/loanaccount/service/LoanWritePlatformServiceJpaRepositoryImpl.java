@@ -82,6 +82,7 @@ import org.apache.fineract.portfolio.collectionsheet.command.SingleRepaymentComm
 import org.apache.fineract.portfolio.common.BusinessEventNotificationConstants.BUSINESS_ENTITY;
 import org.apache.fineract.portfolio.common.BusinessEventNotificationConstants.BUSINESS_EVENTS;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
+import org.apache.fineract.portfolio.common.ConvertAmountToWords;
 import org.apache.fineract.portfolio.common.service.BusinessEventNotifierService;
 import org.apache.fineract.portfolio.group.domain.Group;
 import org.apache.fineract.portfolio.group.exception.GroupNotActiveException;
@@ -360,7 +361,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 existingTransactionIds.addAll(loan.findExistingTransactionIds());
                 existingReversedTransactionIds.addAll(loan.findExistingReversedTransactionIds());
                 LoanTransaction disbursementTransaction = LoanTransaction.disbursement(loan.getOffice(), amountToDisburse, paymentDetail,
-                        actualDisbursementDate, txnExternalId, DateUtils.getLocalDateTimeOfTenant(), currentUser);
+                        actualDisbursementDate, txnExternalId, DateUtils.getLocalDateTimeOfTenant(), currentUser, ConvertAmountToWords.convert(amountToDisburse.getAmountDefaultedToNullIfZero()));
                 disbursementTransaction.updateLoan(loan);
                 loan.addLoanTransaction(disbursementTransaction);
             }
@@ -608,7 +609,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                     existingTransactionIds.addAll(loan.findExistingTransactionIds());
                     existingReversedTransactionIds.addAll(loan.findExistingReversedTransactionIds());
                     LoanTransaction disbursementTransaction = LoanTransaction.disbursement(loan.getOffice(), disburseAmount, paymentDetail,
-                            actualDisbursementDate, txnExternalId, DateUtils.getLocalDateTimeOfTenant(), currentUser);
+                            actualDisbursementDate, txnExternalId, DateUtils.getLocalDateTimeOfTenant(), currentUser, ConvertAmountToWords.convert(disburseAmount.getAmountDefaultedToNullIfZero()));
                     disbursementTransaction.updateLoan(loan);
                     loan.addLoanTransaction(disbursementTransaction);
                 }
@@ -860,7 +861,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         final Money transactionAmountAsMoney = Money.of(loan.getCurrency(), transactionAmount);
         final PaymentDetail paymentDetail = this.paymentDetailWritePlatformService.createPaymentDetail(command, changes);
         LoanTransaction newTransactionDetail = LoanTransaction.repayment(loan.getOffice(), transactionAmountAsMoney, paymentDetail,
-                transactionDate, txnExternalId, DateUtils.getLocalDateTimeOfTenant(), currentUser);
+                transactionDate, txnExternalId, DateUtils.getLocalDateTimeOfTenant(), currentUser, ConvertAmountToWords.convert(transactionAmount));
         if (transactionToAdjust.isInterestWaiver()) {
             Money unrecognizedIncome = transactionAmountAsMoney.zero();
             Money interestComponent = transactionAmountAsMoney;
@@ -872,7 +873,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 }
             }
             newTransactionDetail = LoanTransaction.waiver(loan.getOffice(), loan, transactionAmountAsMoney, transactionDate,
-                    interestComponent, unrecognizedIncome, DateUtils.getLocalDateTimeOfTenant(), currentUser);
+                    interestComponent, unrecognizedIncome, DateUtils.getLocalDateTimeOfTenant(), currentUser, ConvertAmountToWords.convert(transactionAmount));
         }
 
         LocalDate recalculateFrom = null;
@@ -995,7 +996,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             }
         }
         final LoanTransaction waiveInterestTransaction = LoanTransaction.waiver(loan.getOffice(), loan, transactionAmountAsMoney,
-                transactionDate, interestComponent, unrecognizedIncome, DateUtils.getLocalDateTimeOfTenant(), currentUser);
+                transactionDate, interestComponent, unrecognizedIncome, DateUtils.getLocalDateTimeOfTenant(), currentUser, ConvertAmountToWords.convert(transactionAmount));
         this.businessEventNotifierService.notifyBusinessEventToBeExecuted(BUSINESS_EVENTS.LOAN_WAIVE_INTEREST,
                 constructEntityMap(BUSINESS_ENTITY.LOAN_TRANSACTION, waiveInterestTransaction));
         LocalDate recalculateFrom = null;

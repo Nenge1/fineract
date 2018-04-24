@@ -88,6 +88,7 @@ import org.apache.fineract.portfolio.charge.domain.Charge;
 import org.apache.fineract.portfolio.charge.exception.SavingsAccountChargeNotFoundException;
 import org.apache.fineract.portfolio.client.domain.Client;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
+import org.apache.fineract.portfolio.common.ConvertAmountToWords;
 import org.apache.fineract.portfolio.group.domain.Group;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
 import org.apache.fineract.portfolio.savings.SavingsAccountTransactionType;
@@ -493,10 +494,10 @@ public class SavingsAccount extends AbstractPersistableCustom<Long> {
                     if (interestEarnedToBePostedForPeriod.isGreaterThanOrEqualTo(Money.zero(currency))) {
                         
                         newPostingTransaction = SavingsAccountTransaction.interestPosting(this, office(), interestPostingTransactionDate,
-                                interestEarnedToBePostedForPeriod, interestPostingPeriod.isUserPosting());
+                                interestEarnedToBePostedForPeriod, interestPostingPeriod.isUserPosting(), ConvertAmountToWords.convert(interestEarnedToBePostedForPeriod.getAmount()));
                     } else {
                         newPostingTransaction = SavingsAccountTransaction.overdraftInterest(this, office(), interestPostingTransactionDate,
-                                interestEarnedToBePostedForPeriod.negated(), interestPostingPeriod.isUserPosting());
+                                interestEarnedToBePostedForPeriod.negated(), interestPostingPeriod.isUserPosting(), ConvertAmountToWords.convert(interestEarnedToBePostedForPeriod.getAmount()));
                     }
                     addTransaction(newPostingTransaction);
                     if (applyWithHoldTax) {
@@ -523,11 +524,11 @@ public class SavingsAccount extends AbstractPersistableCustom<Long> {
                         if (interestEarnedToBePostedForPeriod.isGreaterThanOrEqualTo(Money.zero(currency))) {
                             newPostingTransaction = SavingsAccountTransaction.interestPosting(this, office(),
                                     interestPostingTransactionDate, interestEarnedToBePostedForPeriod,
-                                    interestPostingPeriod.isUserPosting());
+                                    interestPostingPeriod.isUserPosting(), ConvertAmountToWords.convert(interestEarnedToBePostedForPeriod.getAmount()));
                         } else {
                             newPostingTransaction = SavingsAccountTransaction.overdraftInterest(this, office(),
                                     interestPostingTransactionDate, interestEarnedToBePostedForPeriod.negated(),
-                                    interestPostingPeriod.isUserPosting());
+                                    interestPostingPeriod.isUserPosting(), ConvertAmountToWords.convert(interestEarnedToBePostedForPeriod.getAmount()));
                         }
                         addTransaction(newPostingTransaction);
                         if (applyWithHoldTaxForOldTransaction) {
@@ -599,7 +600,7 @@ public class SavingsAccount extends AbstractPersistableCustom<Long> {
             BigDecimal totalTax = TaxUtils.totalTaxAmount(taxSplit);
             if (totalTax.compareTo(BigDecimal.ZERO) == 1) {
                 SavingsAccountTransaction withholdTransaction = SavingsAccountTransaction.withHoldTax(this, office(), date,
-                        Money.of(currency, totalTax), taxSplit);
+                        Money.of(currency, totalTax), taxSplit,ConvertAmountToWords.convert(totalTax));
                 addTransaction(withholdTransaction);
                 isTaxAdded = true;
             }
@@ -622,7 +623,7 @@ public class SavingsAccount extends AbstractPersistableCustom<Long> {
                 } else if (totalTax.compareTo(withholdTransaction.getAmount()) != 0) {
                     withholdTransaction.reverse();
                     SavingsAccountTransaction newWithholdTransaction = SavingsAccountTransaction.withHoldTax(this, office(),
-                            withholdTransaction.transactionLocalDate(), Money.of(currency, totalTax), taxSplit);
+                            withholdTransaction.transactionLocalDate(), Money.of(currency, totalTax), taxSplit, ConvertAmountToWords.convert(totalTax));
                     addTransaction(newWithholdTransaction);
                     isTaxAdded = true;
                 }
@@ -923,7 +924,7 @@ public class SavingsAccount extends AbstractPersistableCustom<Long> {
 
         final SavingsAccountTransaction transaction = SavingsAccountTransaction.deposit(this, office(), transactionDTO.getPaymentDetail(),
                 transactionDTO.getTransactionDate(), amount, transactionDTO.getCreatedDate(), transactionDTO.getAppUser(),
-                savingsAccountTransactionType);
+                savingsAccountTransactionType, ConvertAmountToWords.convert(amount.getAmount()));
         addTransaction(transaction);
         this.summary.updateSummary(this.currency, this.savingsAccountTransactionSummaryWrapper, this.transactions);
         
@@ -1010,7 +1011,7 @@ public class SavingsAccount extends AbstractPersistableCustom<Long> {
         final Money transactionAmountMoney = Money.of(this.currency, transactionDTO.getTransactionAmount());
         final SavingsAccountTransaction transaction = SavingsAccountTransaction.withdrawal(this, office(),
                 transactionDTO.getPaymentDetail(), transactionDTO.getTransactionDate(), transactionAmountMoney,
-                transactionDTO.getCreatedDate(), transactionDTO.getAppUser());
+                transactionDTO.getCreatedDate(), transactionDTO.getAppUser(), ConvertAmountToWords.convert(transactionAmountMoney.getAmount()));
         addTransaction(transaction);
         if (applyWithdrawFee) {
             // auto pay withdrawal fee
@@ -2578,11 +2579,11 @@ public class SavingsAccount extends AbstractPersistableCustom<Long> {
         SavingsAccountTransaction chargeTransaction = null;
 
         if (savingsAccountCharge.isWithdrawalFee()) {
-            chargeTransaction = SavingsAccountTransaction.withdrawalFee(this, office(), transactionDate, transactionAmount, user);
+            chargeTransaction = SavingsAccountTransaction.withdrawalFee(this, office(), transactionDate, transactionAmount, user, ConvertAmountToWords.convert(transactionAmount.getAmount()));
         } else if (savingsAccountCharge.isAnnualFee()) {
-            chargeTransaction = SavingsAccountTransaction.annualFee(this, office(), transactionDate, transactionAmount, user);
+            chargeTransaction = SavingsAccountTransaction.annualFee(this, office(), transactionDate, transactionAmount, user, ConvertAmountToWords.convert(transactionAmount.getAmount()));
         } else {
-            chargeTransaction = SavingsAccountTransaction.charge(this, office(), transactionDate, transactionAmount, user);
+            chargeTransaction = SavingsAccountTransaction.charge(this, office(), transactionDate, transactionAmount, user, ConvertAmountToWords.convert(transactionAmount.getAmount()));
         }
 
         handleChargeTransactions(savingsAccountCharge, chargeTransaction);
@@ -2590,7 +2591,7 @@ public class SavingsAccount extends AbstractPersistableCustom<Long> {
 
     private void handleWaiverChargeTransactions(SavingsAccountCharge savingsAccountCharge, Money transactionAmount, AppUser user) {
         final SavingsAccountTransaction chargeTransaction = SavingsAccountTransaction.waiver(this, office(),
-                DateUtils.getLocalDateOfTenant(), transactionAmount, user);
+                DateUtils.getLocalDateOfTenant(), transactionAmount, user, ConvertAmountToWords.convert(transactionAmount.getAmount()));
         handleChargeTransactions(savingsAccountCharge, chargeTransaction);
     }
 
@@ -2828,7 +2829,7 @@ public class SavingsAccount extends AbstractPersistableCustom<Long> {
                 boolean postInterestAsOnDate = false;
     	LocalDate transactionDate = DateUtils.getLocalDateOfTenant();
 		if(this.getSummary().getAccountBalance(this.getCurrency()).isGreaterThanZero()){
-            SavingsAccountTransaction transaction = SavingsAccountTransaction.escheat(this, transactionDate, appUser, postInterestAsOnDate);
+            SavingsAccountTransaction transaction = SavingsAccountTransaction.escheat(this, transactionDate, appUser, postInterestAsOnDate, ConvertAmountToWords.convert(this.getSummary().getAccountBalance()));
 			this.transactions.add(transaction);
 		}
         recalculateDailyBalances(Money.zero(this.currency), transactionDate);

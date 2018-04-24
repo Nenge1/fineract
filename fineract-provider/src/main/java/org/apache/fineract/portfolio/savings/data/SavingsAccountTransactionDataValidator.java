@@ -49,6 +49,7 @@ import org.apache.fineract.infrastructure.core.exception.InvalidJsonException;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.portfolio.common.ConvertAmountToWords;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
@@ -215,7 +216,7 @@ public class SavingsAccountTransactionDataValidator {
         Date createdDate = new Date();
         
         SavingsAccountTransaction transaction = SavingsAccountTransaction.holdAmount(account, account.office(), paymentDetails,
-                transactionDate, Money.of(account.getCurrency(), amount), createdDate, createdUser);
+                transactionDate, Money.of(account.getCurrency(), amount), createdDate, createdUser, ConvertAmountToWords.convert(amount));
         return transaction;
     }
 

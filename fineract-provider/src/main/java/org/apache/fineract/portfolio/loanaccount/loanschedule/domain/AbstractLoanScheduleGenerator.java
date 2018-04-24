@@ -39,6 +39,7 @@ import org.apache.fineract.organisation.workingdays.domain.RepaymentRescheduleTy
 import org.apache.fineract.portfolio.calendar.domain.CalendarInstance;
 import org.apache.fineract.portfolio.calendar.service.CalendarUtils;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
+import org.apache.fineract.portfolio.common.ConvertAmountToWords;
 import org.apache.fineract.portfolio.loanaccount.data.DisbursementData;
 import org.apache.fineract.portfolio.loanaccount.data.HolidayDetailDTO;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTermVariationsData;
@@ -869,14 +870,14 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                                         currentPeriodParams.minusEarlyPaidAmount(unprocessed);
                                         updateMapWithAmount(scheduleParams.getPrincipalPortionMap(), unprocessed.negated(), applicableDate);
                                         LoanTransaction loanTransaction = LoanTransaction.repayment(null, unprocessed, null,
-                                                transactionDate, null, DateUtils.getLocalDateTimeOfTenant(), null);
+                                                transactionDate, null, DateUtils.getLocalDateTimeOfTenant(), null, null);
                                         RecalculationDetail recalculationDetail = new RecalculationDetail(transactionDate, loanTransaction);
                                         unprocessedTransactions.add(recalculationDetail);
                                         break;
                                     }
                                 }
                                 LoanTransaction loanTransaction = LoanTransaction.repayment(null, unprocessed, null, scheduledDueDate,
-                                        null, DateUtils.getLocalDateTimeOfTenant(), null);
+                                        null, DateUtils.getLocalDateTimeOfTenant(), null, null);
                                 RecalculationDetail recalculationDetail = new RecalculationDetail(scheduledDueDate, loanTransaction);
                                 unprocessedTransactions.add(recalculationDetail);
                                 checkForOutstanding = false;
