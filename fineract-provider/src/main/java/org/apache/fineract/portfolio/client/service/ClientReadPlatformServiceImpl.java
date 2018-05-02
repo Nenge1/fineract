@@ -367,6 +367,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
 			sqlBuilder.append("c.is_staff as isStaff, ");
 			sqlBuilder.append("c.email_address as emailAddress, ");
             sqlBuilder.append("c.date_of_birth as dateOfBirth, ");
+            sqlBuilder.append("c.client_age as clientAge, ");
+            sqlBuilder.append("c.age_at_office as ageAtOffice, ");
             sqlBuilder.append("c.gender_cv_id as genderId, ");
             sqlBuilder.append("cv.code_value as genderValue, ");
             sqlBuilder.append("c.client_type_cv_id as clienttypeId, ");
@@ -457,6 +459,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
 			final boolean isStaff = rs.getBoolean("isStaff");
 			final String emailAddress = rs.getString("emailAddress");
             final LocalDate dateOfBirth = JdbcSupport.getLocalDate(rs, "dateOfBirth");
+            final Integer clientAge = JdbcSupport.getInteger(rs, "clientAge");
+            final Integer ageAtOffice = JdbcSupport.getInteger(rs, "ageAtOffice");
             final Long genderId = JdbcSupport.getLong(rs, "genderId");
             final String genderValue = rs.getString("genderValue");
             final CodeValueData gender = CodeValueData.instance(genderId, genderValue);
@@ -515,7 +519,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                     closedByUsername, closedByFirstname, closedByLastname);
 
             return ClientData.instance(accountNo, status, subStatus, officeId, officeName, transferToOfficeId, transferToOfficeName, id,
-                    firstname, middlename, lastname, fullname, displayName, externalId, mobileNo, emailAddress, dateOfBirth, gender, activationDate,
+                    firstname, middlename, lastname, fullname, displayName, externalId, mobileNo, emailAddress, dateOfBirth, clientAge, ageAtOffice, gender, activationDate,
                     imageId, staffId, staffName, timeline, savingsProductId, savingsProductName, savingsAccountId, clienttype,
                     classification, legalForm, clientNonPerson, isStaff);
 
@@ -553,6 +557,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
 			builder.append("c.is_staff as isStaff, ");
 			builder.append("c.email_address as emailAddress, ");
             builder.append("c.date_of_birth as dateOfBirth, ");
+            builder.append("c.client_age as clientAge, ");
+            builder.append("c.age_at_office as ageAtOffice, ");
             builder.append("c.gender_cv_id as genderId, ");
             builder.append("cv.code_value as genderValue, ");
             builder.append("c.client_type_cv_id as clienttypeId, ");
@@ -642,6 +648,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
 			final boolean isStaff = rs.getBoolean("isStaff");
 			final String emailAddress = rs.getString("emailAddress");
             final LocalDate dateOfBirth = JdbcSupport.getLocalDate(rs, "dateOfBirth");
+            final Integer clientAge = JdbcSupport.getInteger(rs, "clientAge");
+            final Integer ageAtOffice = JdbcSupport.getInteger(rs, "ageAtOffice");
             final Long genderId = JdbcSupport.getLong(rs, "genderId");
             final String genderValue = rs.getString("genderValue");
             final CodeValueData gender = CodeValueData.instance(genderId, genderValue);
@@ -699,7 +707,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                     closedByUsername, closedByFirstname, closedByLastname);
 
             return ClientData.instance(accountNo, status, subStatus, officeId, officeName, transferToOfficeId, transferToOfficeName, id,
-                    firstname, middlename, lastname, fullname, displayName, externalId, mobileNo, emailAddress, dateOfBirth, gender, activationDate,
+                    firstname, middlename, lastname, fullname, displayName, externalId, mobileNo, emailAddress, dateOfBirth, clientAge, ageAtOffice, gender, activationDate,
                     imageId, staffId, staffName, timeline, savingsProductId, savingsProductName, savingsAccountId, clienttype,
                     classification, legalForm, clientNonPerson, isStaff);
 

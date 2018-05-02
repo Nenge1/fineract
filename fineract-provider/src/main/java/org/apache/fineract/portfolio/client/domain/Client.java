@@ -57,6 +57,7 @@ import org.apache.fineract.portfolio.client.api.ClientApiConstants;
 import org.apache.fineract.portfolio.group.domain.Group;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.joda.time.LocalDate;
+import org.joda.time.Years;
 import org.joda.time.format.DateTimeFormatter;
 
 @Entity
@@ -128,6 +129,12 @@ public final class Client extends AbstractPersistableCustom<Long> {
     @Temporal(TemporalType.DATE)
     private Date dateOfBirth;
 
+    @Column(name = "client_age", nullable = true)
+    private Integer clientAge;
+    
+    @Column(name = "age_at_office", nullable = true)
+    private Integer ageAtOffice;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gender_cv_id", nullable = true)
     private CodeValue gender;
@@ -369,6 +376,8 @@ public final class Client extends AbstractPersistableCustom<Long> {
 
         deriveDisplayName();
         validate();
+        clientAgeLocalDate();
+        ageAtOfficeLocalDate();
     }
 
     private void validate() {
@@ -636,6 +645,9 @@ public final class Client extends AbstractPersistableCustom<Long> {
         validateUpdate();
 
         deriveDisplayName();
+        
+        clientAgeLocalDate();
+        ageAtOfficeLocalDate();
 
         return actualChanges;
     }
@@ -999,6 +1011,22 @@ public final class Client extends AbstractPersistableCustom<Long> {
             dateOfBirth = LocalDate.fromDateFields(this.dateOfBirth);
         }
         return dateOfBirth;
+    }
+    
+    public void clientAgeLocalDate() {
+        Integer clientAge = null;
+        if (this.dateOfBirth != null) {
+           clientAge = Years.yearsBetween(new LocalDate(this.dateOfBirth), new LocalDate()).getYears();
+         }
+        this.clientAge = clientAge;
+    } 
+
+    public void ageAtOfficeLocalDate() {
+        Integer ageAtOffice = null;
+        if (this.activationDate != null) {
+            ageAtOffice = Years.yearsBetween(new LocalDate(this.activationDate), new LocalDate()).getYears();
+        }
+        this.ageAtOffice =  ageAtOffice;
     }
 
     public void reject(AppUser currentUser, CodeValue rejectionReason, Date rejectionDate) {
